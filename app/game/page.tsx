@@ -7,6 +7,7 @@ import {
     type Point,
     type CircleDetection,
 } from "@/lib/houghCircle";
+import Button from "@/components/ui/Button";
 
 function drawCanvas(
     canvas: HTMLCanvasElement,
@@ -147,11 +148,11 @@ export default function Game() {
     };
 
     return (
-        <main className="min-h-screen px-5 py-8 sm:px-8">
-            <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col">
-                <section className="flex flex-1 flex-col gap-5">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="text-4xl tracking-wider my-8 font-bold">
+        <main className="min-h-screen flex items-center sm:px-8">
+            <div className="mx-auto flex w-full max-w-5xl flex-col">
+                <section className="flex items-center flex-1 flex-col gap-8">
+                    <div className="flex w-full items-center justify-between gap-4">
+                        <div className="text-4xl tracking-wider my-4 font-bold">
                             {message}
                         </div>
                         {result && (
@@ -166,10 +167,10 @@ export default function Game() {
                         )}
                     </div>
 
-                    <div className="w-4xl aspect-square">
+                    <div className="w-2xl aspect-square">
                         <canvas
                             ref={canvasRef}
-                            className={`h-full aspect-square min-h-[58vh] w-full touch-none ${result ? "cursor-default" : "cursor-crosshair"}`}
+                            className={`h-full aspect-square w-full touch-none ${result ? "cursor-default" : "cursor-crosshair"}`}
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
@@ -178,32 +179,20 @@ export default function Game() {
                         />
                         {!drawing && !result && (
                             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                <div className="rounded-full border border-white/10 px-5 py-3 text-sm text-white/30">
-                                    Start anywhere
+                                <div className="rounded-full border border-white/25 px-5 py-3 text-sm text-white/50">
+                                    円を描いて下さい
                                 </div>
                             </div>
                         )}
                     </div>
 
                     {result && (
-                        <div className="flex flex-col gap-4 rounded-3xl border p-5 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p className="font-medium text-white">
-                                    Circle detected
-                                </p>
-                                <p className="mt-1 text-sm text-white/40">
-                                    Radial error: {result.error.toFixed(1)} px ·
-                                    Coverage:{" "}
-                                    {Math.round(result.coverage * 100)}%
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => router.push("/")}
-                                className="h-12 rounded-full bg-white px-6 text-sm font-semibold text-black transition-transform hover:scale-[1.02] active:scale-95"
-                            >
-                                Play Again
-                            </button>
-                        </div>
+                        <Button
+                            iconName="home"
+                            onClick={() => router.push("/")}
+                        >
+                            ホームに戻る
+                        </Button>
                     )}
                 </section>
             </div>

@@ -26,7 +26,7 @@ export default function Home() {
                         iconName="play"
                         onClick={() => router.push("/game")}
                     >
-                        Play
+                        プレイ
                     </Button>
                 </section>
             </div>
