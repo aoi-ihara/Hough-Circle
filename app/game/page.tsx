@@ -47,9 +47,7 @@ function drawStroke(
         else ctx.lineTo(x, y);
     }
 
-    ctx.strokeStyle = dashed
-        ? "rgba(255, 255, 255, 0.22)"
-        : "#ffffff";
+    ctx.strokeStyle = dashed ? "rgba(255, 255, 255, 0.22)" : "#ffffff";
     ctx.lineWidth = dashed ? 2 : 5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -78,7 +76,8 @@ function drawCanvas(
         drawStroke(ctx, points);
 
         if (detection) {
-            const eased = 1 - Math.pow(1 - Math.max(0, Math.min(morphProgress, 1)), 3);
+            const eased =
+                1 - Math.pow(1 - Math.max(0, Math.min(morphProgress, 1)), 3);
             const centerX = detection.center.x;
             const centerY = detection.center.y;
             const pulse = (1 - eased) * Math.sin(time / 180) * 5;
@@ -252,7 +251,14 @@ export default function Game() {
         analysisTimeoutRef.current = window.setTimeout(() => {
             if (detection) {
                 revealScore(detection);
-                drawCanvas(canvas, pointsRef.current, detection, "revealed", performance.now(), 1);
+                drawCanvas(
+                    canvas,
+                    pointsRef.current,
+                    detection,
+                    "revealed",
+                    performance.now(),
+                    1,
+                );
             } else {
                 setAnalysisPhase("failed");
                 setMessage("円を検知できませんでした。もう一度描いて下さい。");
@@ -280,7 +286,8 @@ export default function Game() {
     const handlePointerMove = (
         event: React.PointerEvent<HTMLCanvasElement>,
     ) => {
-        if (!drawingRef.current || result || analysisPhase === "analyzing") return;
+        if (!drawingRef.current || result || analysisPhase === "analyzing")
+            return;
         const point = getPoint(event.nativeEvent);
         if (!point) return;
 
@@ -336,23 +343,26 @@ export default function Game() {
                             onPointerCancel={handlePointerCancel}
                             aria-label="Circle drawing canvas"
                         />
-                        {!drawing && !result && analysisPhase !== "analyzing" && (
-                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                <div className="rounded-full border border-white/25 px-5 py-3 text-sm text-white/50">
-                                    円を描いて下さい
+                        {!drawing &&
+                            !result &&
+                            analysisPhase !== "analyzing" && (
+                                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                                    <div className="rounded-full border border-white/25 px-5 py-3 text-sm text-white/50">
+                                        円を描いて下さい
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
                     </div>
 
-                    {result && (
-                        <Button
-                            iconName="home"
-                            onClick={() => router.push("/")}
-                        >
-                            ホームに戻る
-                        </Button>
-                    )}
+                    <Button
+                        iconName="home"
+                        className={result ? "opacity-100" : "opacity-0"}
+                        onClick={() => {
+                            if (result) router.push("/");
+                        }}
+                    >
+                        ホームに戻る
+                    </Button>
                 </section>
             </div>
         </main>
