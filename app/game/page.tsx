@@ -4,6 +4,40 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { detectCircle, type Point, type CircleDetection } from "@/lib/houghCircle";
 
+function drawCanvas(
+  canvas: HTMLCanvasElement,
+  points: Point[],
+  detection: CircleDetection | null,
+) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#101114";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (points.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  }
+
+  if (detection) {
+    ctx.beginPath();
+    ctx.arc(detection.center.x, detection.center.y, detection.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
 export default function Game() {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,38 +58,6 @@ export default function Game() {
     };
   };
 
-  const draw = (points: Point[], detection: CircleDetection | null = null) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#101114";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    if (points.length > 1) {
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.stroke();
-    }
-
-    if (detection) {
-      ctx.beginPath();
-      ctx.arc(detection.center.x, detection.center.y, detection.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 8]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -65,7 +67,7 @@ export default function Game() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.max(1, Math.floor(rect.width * dpr));
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-      draw(pointsRef.current, result);
+      drawCanvas(canvas, pointsRef.current, result);
     };
 
     resize();
@@ -84,10 +86,10 @@ export default function Game() {
     setResult(detection);
     if (detection) {
       setMessage("Hough transform complete.");
-      draw(pointsRef.current, detection);
+      drawCanvas(canvas, pointsRef.current, detection);
     } else {
       setMessage("I could not find a reliable circle. Try again.");
-      draw(pointsRef.current);
+      drawCanvas(canvas, pointsRef.current, null);
     }
   };
 
@@ -100,7 +102,7 @@ export default function Game() {
     drawingRef.current = true;
     setDrawing(true);
     setMessage("Keep going…");
-    draw(pointsRef.current);
+    drawCanvas(event.currentTarget, pointsRef.current, null);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -112,7 +114,7 @@ export default function Game() {
     const previous = points[points.length - 1];
     if (!previous || Math.hypot(point.x - previous.x, point.y - previous.y) >= 2) {
       points.push(point);
-      draw(points);
+      drawCanvas(event.currentTarget, points, null);
     }
   };
 
