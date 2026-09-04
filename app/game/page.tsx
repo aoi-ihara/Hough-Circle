@@ -16,6 +16,7 @@ function drawStroke(
     points: Point[],
     progress = 0,
     detection: CircleDetection | null = null,
+    dashed = false,
 ) {
     if (points.length < 2) return;
 
@@ -46,11 +47,15 @@ function drawStroke(
         else ctx.lineTo(x, y);
     }
 
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = dashed
+        ? "rgba(255, 255, 255, 0.22)"
+        : "#ffffff";
+    ctx.lineWidth = dashed ? 2 : 5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+    if (dashed) ctx.setLineDash([8, 8]);
     ctx.stroke();
+    if (dashed) ctx.setLineDash([]);
 }
 
 function drawCanvas(
@@ -69,7 +74,8 @@ function drawCanvas(
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (phase === "analyzing") {
-        drawStroke(ctx, points, morphProgress, detection);
+        // Keep the user's original stroke fixed throughout the analysis.
+        drawStroke(ctx, points);
 
         if (detection) {
             const eased = 1 - Math.pow(1 - Math.max(0, Math.min(morphProgress, 1)), 3);
@@ -77,6 +83,10 @@ function drawCanvas(
             const centerY = detection.center.y;
             const pulse = (1 - eased) * Math.sin(time / 180) * 5;
             const radius = detection.radius + pulse;
+
+            // The analysis result starts as the user's exact stroke and morphs
+            // into the detected circle independently as a dashed line.
+            drawStroke(ctx, points, morphProgress, detection, true);
 
             ctx.save();
             ctx.globalAlpha = 0.12 + eased * 0.1;
@@ -103,20 +113,10 @@ function drawCanvas(
     } else if (phase === "idle") {
         drawStroke(ctx, points);
     } else if (phase === "revealed" && detection) {
+        // Keep the original stroke and the transformed dashed circle exactly as
+        // they were at the end of the analysis to avoid a visual jump.
         drawStroke(ctx, points);
-        ctx.beginPath();
-        ctx.arc(
-            detection.center.x,
-            detection.center.y,
-            detection.radius,
-            0,
-            Math.PI * 2,
-        );
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 8]);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        drawStroke(ctx, points, 1, detection, true);
     } else if (phase === "failed") {
         drawStroke(ctx, points);
     }
@@ -252,7 +252,7 @@ export default function Game() {
         analysisTimeoutRef.current = window.setTimeout(() => {
             if (detection) {
                 revealScore(detection);
-                drawCanvas(canvas, pointsRef.current, detection, "revealed");
+                drawCanvas(canvas, pointsRef.current, detection, "revealed", performance.now(), 1);
             } else {
                 setAnalysisPhase("failed");
                 setMessage("円を検知できませんでした。もう一度描いて下さい。");
