@@ -11,12 +11,55 @@ import Button from "@/components/ui/Button";
 
 type AnalysisPhase = "idle" | "analyzing" | "revealed" | "failed";
 
+function drawStroke(
+    ctx: CanvasRenderingContext2D,
+    points: Point[],
+    progress = 0,
+    detection: CircleDetection | null = null,
+) {
+    if (points.length < 2) return;
+
+    const eased = 1 - Math.pow(1 - Math.max(0, Math.min(progress, 1)), 3);
+    const morphCenter = detection?.center;
+    const morphRadius = detection?.radius ?? 0;
+
+    ctx.beginPath();
+    for (let i = 0; i < points.length; i += 1) {
+        const point = points[i];
+        let x = point.x;
+        let y = point.y;
+
+        if (morphCenter && morphRadius > 0) {
+            const dx = point.x - morphCenter.x;
+            const dy = point.y - morphCenter.y;
+            const distance = Math.hypot(dx, dy);
+
+            if (distance > 0.001) {
+                const targetX = morphCenter.x + (dx / distance) * morphRadius;
+                const targetY = morphCenter.y + (dy / distance) * morphRadius;
+                x += (targetX - x) * eased;
+                y += (targetY - y) * eased;
+            }
+        }
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+}
+
 function drawCanvas(
     canvas: HTMLCanvasElement,
     points: Point[],
     detection: CircleDetection | null,
     phase: AnalysisPhase,
     time = 0,
+    morphProgress = 0,
 ) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -25,52 +68,42 @@ function drawCanvas(
     ctx.fillStyle = "#101114";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (points.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i += 1)
-            ctx.lineTo(points[i].x, points[i].y);
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 5;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.stroke();
-    }
-
     if (phase === "analyzing") {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const baseRadius = Math.min(canvas.width, canvas.height) * 0.27;
-        const pulse = Math.sin(time / 180) * 7;
-        const driftX = Math.sin(time / 420) * 18;
-        const driftY = Math.cos(time / 510) * 14;
-        const rotation = (time / 900) % (Math.PI * 2);
+        drawStroke(ctx, points, morphProgress, detection);
 
-        for (let i = 0; i < 3; i += 1) {
-            const radius = baseRadius + (i - 1) * 22 + pulse * (i === 1 ? 1 : 0.4);
-            const x = centerX + driftX * (i - 1) * 0.4;
-            const y = centerY + driftY * (i - 1) * 0.4;
+        if (detection) {
+            const eased = 1 - Math.pow(1 - Math.max(0, Math.min(morphProgress, 1)), 3);
+            const centerX = detection.center.x;
+            const centerY = detection.center.y;
+            const pulse = (1 - eased) * Math.sin(time / 180) * 5;
+            const radius = detection.radius + pulse;
 
+            ctx.save();
+            ctx.globalAlpha = 0.12 + eased * 0.1;
             ctx.beginPath();
-            ctx.arc(x, y, radius, rotation + i * 0.8, rotation + Math.PI * 1.25 + i * 0.8);
-            ctx.strokeStyle = i === 1 ? "rgba(255, 255, 255, 0.28)" : "rgba(255, 255, 255, 0.10)";
-            ctx.lineWidth = i === 1 ? 2 : 1;
-            ctx.setLineDash(i === 1 ? [8, 8] : [4, 12]);
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 12]);
+            ctx.lineDashOffset = -time / 18;
             ctx.stroke();
+            ctx.restore();
+
+            if (eased > 0.35) {
+                ctx.beginPath();
+                ctx.moveTo(centerX - 14, centerY);
+                ctx.lineTo(centerX + 14, centerY);
+                ctx.moveTo(centerX, centerY - 14);
+                ctx.lineTo(centerX, centerY + 14);
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
         }
-
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.moveTo(centerX - 18, centerY);
-        ctx.lineTo(centerX + 18, centerY);
-        ctx.moveTo(centerX, centerY - 18);
-        ctx.lineTo(centerX, centerY + 18);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-    }
-
-    if (phase === "revealed" && detection) {
+    } else if (phase === "idle") {
+        drawStroke(ctx, points);
+    } else if (phase === "revealed" && detection) {
+        drawStroke(ctx, points);
         ctx.beginPath();
         ctx.arc(
             detection.center.x,
@@ -84,6 +117,8 @@ function drawCanvas(
         ctx.setLineDash([8, 8]);
         ctx.stroke();
         ctx.setLineDash([]);
+    } else if (phase === "failed") {
+        drawStroke(ctx, points);
     }
 }
 
@@ -95,6 +130,7 @@ export default function Game() {
     const detectionRef = useRef<CircleDetection | null>(null);
     const analysisTimeoutRef = useRef<number | null>(null);
     const scoreAnimationRef = useRef<number | null>(null);
+    const analysisStartedAtRef = useRef<number | null>(null);
     const [drawing, setDrawing] = useState(false);
     const [result, setResult] = useState<CircleDetection | null>(null);
     const [analysisPhase, setAnalysisPhase] = useState<AnalysisPhase>("idle");
@@ -140,15 +176,22 @@ export default function Game() {
         if (!canvas) return;
 
         let animationFrame = 0;
+        const start = analysisStartedAtRef.current ?? performance.now();
+        analysisStartedAtRef.current = start;
+
         const animate = (time: number) => {
+            const progress = Math.min((time - start) / 950, 1);
             drawCanvas(
                 canvas,
                 pointsRef.current,
                 detectionRef.current,
                 "analyzing",
                 time,
+                progress,
             );
-            animationFrame = requestAnimationFrame(animate);
+            if (progress < 1) {
+                animationFrame = requestAnimationFrame(animate);
+            }
         };
 
         animationFrame = requestAnimationFrame(animate);
@@ -194,6 +237,7 @@ export default function Game() {
         setDisplayScore(0);
         setAnalysisPhase("analyzing");
         setMessage("解析しています…");
+        analysisStartedAtRef.current = performance.now();
 
         const canvas = canvasRef.current;
         if (!canvas) return;
