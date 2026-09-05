@@ -80,7 +80,7 @@ export function detectCircle(
                     snappedX,
                     snappedY,
                     radius,
-                    0.16,
+                    0.14,
                 );
                 if (votes > best.votes)
                     best = { x: snappedX, y: snappedY, radius, votes };
@@ -146,7 +146,7 @@ function countRadialAgreement(
     radius: number,
     toleranceRatio: number,
 ) {
-    const tolerance = Math.max(6, radius * toleranceRatio);
+    const tolerance = Math.max(5, radius * toleranceRatio);
     let votes = 0;
     for (const point of points) {
         if (
@@ -169,28 +169,82 @@ function refineCircle(
     let currentY = centerY;
     let currentRadius = radius;
 
-    for (let iteration = 0; iteration < 5; iteration += 1) {
+    for (let iteration = 0; iteration < 6; iteration += 1) {
         const near = points.filter(
             (point) =>
                 Math.abs(
                     Math.hypot(point.x - currentX, point.y - currentY) -
                         currentRadius,
-                ) <
-                currentRadius * 0.16,
+                ) <=
+                Math.max(6, currentRadius * 0.12),
         );
         if (near.length < 8) break;
 
-        currentX = near.reduce((sum, point) => sum + point.x, 0) / near.length;
-        currentY = near.reduce((sum, point) => sum + point.y, 0) / near.length;
-        currentRadius =
-            near.reduce(
-                (sum, point) =>
-                    sum + Math.hypot(point.x - currentX, point.y - currentY),
-                0,
-            ) / near.length;
+        const fitted = fitCircleLeastSquares(near);
+        if (!fitted) break;
+
+        const movement = Math.hypot(
+            fitted.x - currentX,
+            fitted.y - currentY,
+        );
+        const radiusMovement = Math.abs(fitted.radius - currentRadius);
+
+        currentX = fitted.x;
+        currentY = fitted.y;
+        currentRadius = fitted.radius;
+
+        if (movement < 0.05 && radiusMovement < 0.05) break;
     }
 
     return { x: currentX, y: currentY, radius: currentRadius };
+}
+
+/** Fit a circle with an algebraic least-squares solve, avoiding point-density bias. */
+function fitCircleLeastSquares(points: Point[]) {
+    if (points.length < 3) return null;
+
+    const meanX = points.reduce((sum, point) => sum + point.x, 0) / points.length;
+    const meanY = points.reduce((sum, point) => sum + point.y, 0) / points.length;
+
+    let sumXX = 0;
+    let sumXY = 0;
+    let sumYY = 0;
+    let sumXQ = 0;
+    let sumYQ = 0;
+
+    for (const point of points) {
+        const x = point.x - meanX;
+        const y = point.y - meanY;
+        const q = x * x + y * y;
+        sumXX += x * x;
+        sumXY += x * y;
+        sumYY += y * y;
+        sumXQ += x * q;
+        sumYQ += y * q;
+    }
+
+    const determinant = sumXX * sumYY - sumXY * sumXY;
+    if (Math.abs(determinant) < 1e-8) return null;
+
+    const offsetX = (sumXQ * sumYY - sumYQ * sumXY) / (2 * determinant);
+    const offsetY = (sumYQ * sumXX - sumXQ * sumXY) / (2 * determinant);
+    const fittedX = meanX + offsetX;
+    const fittedY = meanY + offsetY;
+
+    const fittedRadius =
+        points.reduce(
+            (sum, point) =>
+                sum + Math.hypot(point.x - fittedX, point.y - fittedY),
+            0,
+        ) / points.length;
+
+    if (!Number.isFinite(fittedRadius) || fittedRadius <= 0) return null;
+
+    return {
+        x: fittedX,
+        y: fittedY,
+        radius: fittedRadius,
+    };
 }
 
 function radialError(
