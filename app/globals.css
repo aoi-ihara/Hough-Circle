@@ -21,6 +21,10 @@
     }
 }
 
+* {
+    cursor: none !important;
+}
+
 body {
     @apply bg-(--color-background) text-(--color-foreground) font-sans flex flex-col items-center;
 }
