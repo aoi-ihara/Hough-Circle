@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CustomCursor } from "@/components/layout/CustomCursor";
 import { Footer } from "@/components/layout/Footer";
 import { LINE_Seed_JP, JetBrains_Mono } from "next/font/google";
 
@@ -18,13 +19,13 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
     title: "Hough Circle",
     description:
-        "好きな単語リストで、友達と一緒にタイピングゲームをプレイしながら単語を覚えられるオンラインゲーム。",
+        "手書きした円をHough変換で解析し、どれくらい真円に近いかを判定するツール。",
     openGraph: {
-        title: "Ei-TypeBomb",
+        title: "Hough Circle",
         description:
-            "好きな単語リストで、友達と一緒にタイピングゲームをプレイしながら単語を覚えられるオンラインゲーム。",
-        url: "ei-typebomb.vgnz93hs.com",
-        siteName: "Ei-TypeBomb",
+            "手書きした円をHough変換で解析し、どれくらい真円に近いかを判定するツール。",
+        url: "https://hough-circle.vgnz93hs.com",
+        siteName: "Hough Circle",
     },
     icons: {
         apple: "/apple-icon.png",
@@ -41,6 +42,7 @@ export default function RootLayout({
             <body
                 className={`${lineSeedJp.variable} ${jetbrainsMono.variable} min-h-full flex flex-col`}
             >
+                <CustomCursor />
                 <main className="flex flex-col h-dvh w-full items-center">
                     {children}
                     <div className="text-xs w-full flex fixed opacity-50 justify-center md:justify-start bottom-3">
