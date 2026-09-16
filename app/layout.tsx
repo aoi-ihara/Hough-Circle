@@ -16,15 +16,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Ei-TypeBomb",
+    title: "Hough Circle",
     description:
-        "好きな単語リストで、友達と一緒にタイピングゲームをプレイしながら単語を覚えられるオンラインゲーム。",
+        "フリーハンドで描いた円をハフ変換で解析し、真円にどれだけ近いかをスコアで評価します。",
     openGraph: {
-        title: "Ei-TypeBomb",
+        title: "Hough Circle",
         description:
-            "好きな単語リストで、友達と一緒にタイピングゲームをプレイしながら単語を覚えられるオンラインゲーム。",
-        url: "ei-typebomb.vgnz93hs.com",
-        siteName: "Ei-TypeBomb",
+            "フリーハンドで描いた円をハフ変換で解析し、真円にどれだけ近いかをスコアで評価します。",
+        url: "hough-circle.vgnz93hs.com",
+        siteName: "Hough Circle",
     },
     icons: {
         apple: "/apple-icon.png",
