@@ -31,7 +31,7 @@ export function CustomCursor() {
     return (
         <div
             aria-hidden="true"
-            className="pointer-events-none fixed z-9999 size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-(--color-foreground)"
+            className="pointer-events-none fixed z-9999 size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-gray-500/50"
             style={{
                 left: position.x,
                 top: position.y,
