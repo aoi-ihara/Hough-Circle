@@ -47,7 +47,7 @@ function drawStroke(
         else ctx.lineTo(x, y);
     }
 
-    ctx.strokeStyle = dashed ? "rgba(255, 255, 255, 0.22)" : "#ffffff";
+    ctx.strokeStyle = dashed ? "rgba(255, 255, 255, 0.5)" : "#ffffff";
     ctx.lineWidth = dashed ? 2 : 5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -88,7 +88,7 @@ function drawCanvas(
             drawStroke(ctx, points, morphProgress, detection, true);
 
             ctx.save();
-            ctx.globalAlpha = 0.12 + eased * 0.1;
+            ctx.globalAlpha = 0.5;
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
             ctx.strokeStyle = "#ffffff";
@@ -104,7 +104,7 @@ function drawCanvas(
                 ctx.lineTo(centerX + 14, centerY);
                 ctx.moveTo(centerX, centerY - 14);
                 ctx.lineTo(centerX, centerY + 14);
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }

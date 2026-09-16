@@ -109,12 +109,9 @@ export function detectCircle(
         0,
         1,
     );
+    const shapeScore = errorScore * 0.8125 + compactness * 0.1875;
     const finalScore = Math.round(
-        clamp(
-            (errorScore * 0.65 + coverage * 0.2 + compactness * 0.15) * 100,
-            0,
-            100,
-        ),
+        clamp(shapeScore * coverage * 100, 0, 100),
     );
 
     return {
