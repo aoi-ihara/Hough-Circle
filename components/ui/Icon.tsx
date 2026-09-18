@@ -37,6 +37,9 @@ import {
     WandSparkles,
     Loader,
     Loader2,
+    LoaderCircle,
+    Cpu,
+    Medal,
 } from "lucide-react";
 
 const icons: Record<string, LucideIcon> = {
@@ -76,7 +79,9 @@ const icons: Record<string, LucideIcon> = {
     info: Info,
     wandSparkles: WandSparkles,
     loader: Loader,
-    loaderCircle: Loader2,
+    loaderCircle: LoaderCircle,
+    cpu: Cpu,
+    medal: Medal,
 };
 
 export type IconName = keyof typeof icons;
