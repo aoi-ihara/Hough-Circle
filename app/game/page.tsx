@@ -261,7 +261,7 @@ export default function Game() {
                 );
             } else {
                 setAnalysisPhase("failed");
-                setMessage("円を検知できませんでした。もう一度描いて下さい。");
+                setMessage("もう一度描いて下さい。");
                 drawCanvas(canvas, pointsRef.current, null, "failed");
             }
         }, 1050);
