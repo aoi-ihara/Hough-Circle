@@ -110,7 +110,7 @@ export default function Home() {
                 </div>
                 <div className="flex gap-2">
                     <Icon name="medal" className="shrink-0" />
-                    3回行なって、最高得点が80を超えたら勝ちです。
+                    3回行なって、最高得点が85を超えたら勝ちです。
                 </div>
             </div>
 
