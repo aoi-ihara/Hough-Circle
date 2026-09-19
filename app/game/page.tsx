@@ -12,7 +12,7 @@ import Button from "@/components/ui/Button";
 type AnalysisPhase = "idle" | "analyzing" | "revealed" | "failed";
 
 const TOTAL_ROUNDS = 3;
-const WIN_SCORE = 80;
+const WIN_SCORE = 85;
 
 function drawStroke(
     ctx: CanvasRenderingContext2D,
